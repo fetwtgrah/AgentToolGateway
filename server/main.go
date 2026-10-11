@@ -12,6 +12,7 @@ func main() {
 	repo := gateway.NewToolRepo()
 	am := gateway.NewApprovalManager()
 	p := gateway.NewPolicy()
+	audit := gateway.NewAuditLogger()
 	repo.Register(gateway.Tool{
 		Name:    "read_note",
 		Risk:    gateway.RiskLevelLow,
@@ -19,15 +20,15 @@ func main() {
 	})
 	repo.Register(gateway.Tool{
 		Name:    "send_email",
-		Risk:    gateway.RiskLevelLow,
+		Risk:    gateway.RiskLevelMedium,
 		Execute: tools.SendEmail,
 	})
 	repo.Register(gateway.Tool{
 		Name:    "delete_note",
-		Risk:    gateway.RiskLevelLow,
+		Risk:    gateway.RiskLevelMedium,
 		Execute: tools.DeleteNote,
 	})
-	server := gateway.NewGatewayServer(repo, am, p)
+	server := gateway.NewGatewayServer(repo, am, p, audit)
 
 	r := gin.Default()
 	r.POST("/toolCalls",
@@ -37,8 +38,10 @@ func main() {
 				c.JSON(400, gin.H{"error": err.Error()})
 				return
 			}
+
 			fmt.Println("tool:", call.ToolName)
 			fmt.Println("args:", string(call.Args))
+
 			result, err := server.HandleToolCall(call)
 			if err != nil {
 				c.JSON(400, gin.H{"error": err.Error()})
@@ -50,12 +53,12 @@ func main() {
 		})
 	r.POST("/approvals/:id", func(c *gin.Context) {
 		id := c.Param("id")
-		approval := am.Get(id)
-		if approval == nil {
+		err := am.Approve(id)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		approval.Status = "pending"
-		result, err := server.ExecuteApproval(approval.Call)
+		result, err := server.ExecuteApproval(id)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
@@ -63,6 +66,13 @@ func main() {
 		c.JSON(200, gin.H{
 			"result": result,
 		})
+	})
+	r.GET("/logs", func(c *gin.Context) {
+		events := audit.List()
+		c.JSON(200, gin.H{
+			"events": events,
+		})
+
 	})
 	if err := r.Run(":8080"); err != nil {
 		panic(err)

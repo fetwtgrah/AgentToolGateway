@@ -36,6 +36,9 @@ func (am *ApprovalManager) Creat(call ToolCall) *Approval {
 	am.approvals[approval.ID] = approval
 	return approval
 }
+func (am *ApprovalManager) Get(id string) *Approval {
+	return am.approvals[id]
+}
 func (am *ApprovalManager) Approve(id string) error {
 	approval := am.Get(id)
 	if approval == nil {
@@ -44,6 +47,11 @@ func (am *ApprovalManager) Approve(id string) error {
 	approval.Status = Approved
 	return nil
 }
-func (am *ApprovalManager) Get(id string) *Approval {
-	return am.approvals[id]
+func (am *ApprovalManager) Reject(id string) error {
+	approval := am.Get(id)
+	if approval == nil {
+		return fmt.Errorf("approval not found")
+	}
+	approval.Status = Rejected
+	return nil
 }
