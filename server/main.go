@@ -3,7 +3,8 @@ package main
 import (
 	"AgentToolGateway/server/gateway"
 	"AgentToolGateway/server/tools"
-	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,9 +40,6 @@ func main() {
 				return
 			}
 
-			fmt.Println("tool:", call.ToolName)
-			fmt.Println("args:", string(call.Args))
-
 			result, err := server.HandleToolCall(call)
 			if err != nil {
 				c.JSON(400, gin.H{"error": err.Error()})
@@ -74,7 +72,14 @@ func main() {
 		})
 
 	})
-	if err := r.Run(":8080"); err != nil {
+	s := &http.Server{
+		Addr:         ":8080",
+		Handler:      r,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+	err := s.ListenAndServe()
+	if err != nil {
 		panic(err)
 	}
 

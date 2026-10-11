@@ -29,14 +29,11 @@ func DeleteNote(args json.RawMessage) (any, error) {
 		return nil, err
 	}
 
-	if !filepath.IsAbs(absTarget) {
-		return nil, errors.New("invalid path")
-	}
 	rel, err := filepath.Rel(absBase, absTarget)
 	if err != nil {
 		return nil, err
 	}
-	if strings.HasPrefix(rel, "..") {
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 		return nil, errors.New("permission denied")
 	}
 	err = os.Remove(absTarget)

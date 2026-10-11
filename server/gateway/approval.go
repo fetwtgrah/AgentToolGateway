@@ -55,3 +55,11 @@ func (am *ApprovalManager) Reject(id string) error {
 	approval.Status = Rejected
 	return nil
 }
+func (am *ApprovalManager) Remove(id string) error {
+	approval := am.Get(id)
+	if approval == nil {
+		return fmt.Errorf("approval not found")
+	}
+	delete(am.approvals, approval.ID)
+	return nil
+}

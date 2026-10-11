@@ -41,7 +41,7 @@ func (server *GatewayServer) HandleToolCall(call ToolCall) (any, error) {
 	case Allow:
 		result, err := tool.Execute(call.Args)
 		if err != nil {
-			server.Audit.UpdateStatus(call.CallID, "fail")
+			server.Audit.UpdateStatus(call.CallID, fmt.Sprintf("ERROR: %s", err.Error()))
 			return nil, err
 		}
 		server.Audit.UpdateStatus(
@@ -75,6 +75,7 @@ func (server *GatewayServer) ExecuteApproval(id string) (any, error) {
 	if approval.Status != Approved {
 		return nil, fmt.Errorf("not approved")
 	}
+
 	call := approval.Call
 	tool, ok := server.Repo.Get(call.ToolName)
 	if !ok {
@@ -82,12 +83,17 @@ func (server *GatewayServer) ExecuteApproval(id string) (any, error) {
 	}
 	result, err := tool.Execute(call.Args)
 	if err != nil {
-		server.Audit.UpdateStatus(call.CallID, "fail")
+		server.Audit.UpdateStatus(call.CallID, fmt.Sprintf("ERROR: %s", err.Error()))
+		return nil, err
+	}
+	err = server.Am.Remove(id)
+	if err != nil {
 		return nil, err
 	}
 	server.Audit.UpdateStatus(
 		call.CallID,
 		"success",
 	)
+
 	return result, nil
 }
