@@ -1,11 +1,20 @@
 package tools
 
 import (
+	"encoding/json"
 	"os"
 )
 
-func ReadNote(path string) (string, error) {
-	data, err := os.ReadFile(path)
+type ReadNoteArgs struct {
+	Path string
+}
+
+func ReadNote(args json.RawMessage) (any, error) {
+	var r ReadNoteArgs
+	if err := json.Unmarshal(args, &r); err != nil {
+		return "", err
+	}
+	data, err := os.ReadFile(r.Path)
 	if err != nil {
 		return "", err
 	}
