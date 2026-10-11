@@ -93,3 +93,7 @@ GET /logs
 ## 注意
 
 - 服务端 `ToolCall.Args` 的 JSON 标签为 `args`，客户端调用时字段名需保持一致。
+- 测试功能
+```go
+go test ./test -v 
+```
