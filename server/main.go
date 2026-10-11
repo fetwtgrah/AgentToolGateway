@@ -11,7 +11,13 @@ func main() {
 	repo := gateway.NewToolRepo()
 	repo.Register(gateway.Tool{
 		Name:    "read_note",
+		Risk:    gateway.RiskLevelLow,
 		Execute: tools.ReadNote,
+	})
+	repo.Register(gateway.Tool{
+		Name:    "send_email",
+		Risk:    gateway.RiskLevelMedium,
+		Execute: tools.SendEmail,
 	})
 	server := gateway.NewGatewayServer(repo)
 
@@ -23,7 +29,7 @@ func main() {
 				c.JSON(400, gin.H{"error": err.Error()})
 				return
 			}
-			result, err := server.Execute(call)
+			result, err := server.HandleToolCall(call)
 			if err != nil {
 				c.JSON(400, gin.H{"error": err.Error()})
 				return

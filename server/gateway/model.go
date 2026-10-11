@@ -7,8 +7,18 @@ type ToolCall struct {
 	ToolName string          `json:"tool_name"`
 	Args     json.RawMessage `json:"args"`
 }
+
+type RiskLevel string
+
+const (
+	RiskLevelLow    RiskLevel = "low"    //可直接
+	RiskLevelMedium RiskLevel = "medium" //需要更高权限
+	RiskLevelHigh   RiskLevel = "high"   //不允许
+)
+
 type Tool struct {
 	Name    string
+	Risk    RiskLevel
 	Execute func(
 		args json.RawMessage,
 	) (any, error)
