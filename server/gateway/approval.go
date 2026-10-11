@@ -1,11 +1,16 @@
 package gateway
 
+import (
+	"fmt"
+	"time"
+)
+
 type ApprovalStatus string
 
 const (
 	Pending  ApprovalStatus = "pending"
 	Rejected ApprovalStatus = "rejected"
-	Allowed  ApprovalStatus = "allowed"
+	Approved ApprovalStatus = "approved"
 )
 
 type Approval struct {
@@ -24,14 +29,21 @@ func NewApprovalManager() *ApprovalManager {
 }
 func (am *ApprovalManager) Creat(call ToolCall) *Approval {
 	approval := &Approval{
-		ID:     "123456",
+		ID:     fmt.Sprintf("%v", time.Now().UnixNano()),
 		Call:   call,
 		Status: Pending,
 	}
 	am.approvals[approval.ID] = approval
 	return approval
 }
-
+func (am *ApprovalManager) Approve(id string) error {
+	approval := am.Get(id)
+	if approval == nil {
+		return fmt.Errorf("approval not found")
+	}
+	approval.Status = Approved
+	return nil
+}
 func (am *ApprovalManager) Get(id string) *Approval {
 	return am.approvals[id]
 }

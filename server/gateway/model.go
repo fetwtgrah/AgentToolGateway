@@ -5,7 +5,7 @@ import "encoding/json"
 type ToolCall struct {
 	CallID   string          `json:"call_id"`
 	ToolName string          `json:"tool_name"`
-	Args     json.RawMessage `json:"args"`
+	Args     json.RawMessage `json:"arguments"`
 }
 
 type RiskLevel string

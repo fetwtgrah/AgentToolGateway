@@ -1,16 +1,20 @@
 package gateway
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type GatewayServer struct {
 	Repo *ToolRepo
 	Am   *ApprovalManager
+	P    *Policy
 }
 
-func NewGatewayServer(repo *ToolRepo, am *ApprovalManager) *GatewayServer {
+func NewGatewayServer(repo *ToolRepo, am *ApprovalManager, p *Policy) *GatewayServer {
 	return &GatewayServer{
 		Repo: repo,
 		Am:   am,
+		P:    p,
 	}
 }
 
@@ -20,20 +24,17 @@ func (server *GatewayServer) HandleToolCall(call ToolCall) (any, error) {
 	if !ok {
 		return nil, fmt.Errorf("NO TOOL")
 	}
-	switch tool.Risk {
-	case RiskLevelLow:
-		result, err := tool.Execute(call.Args)
-		if err != nil {
-			return nil, err
-		}
+	switch server.P.Check(tool) {
+	case Allow:
+		result, _ := tool.Execute(call.Args)
 		return result, nil
-	case RiskLevelMedium:
+	case RequiredApproval:
 		approval := server.Am.Creat(call)
 		return approval, nil
-
-	case RiskLevelHigh:
-		return nil, fmt.Errorf("execution denied")
+	case Deny:
+		return nil, fmt.Errorf("permission denied")
 	}
+
 	return nil, nil
 }
 
